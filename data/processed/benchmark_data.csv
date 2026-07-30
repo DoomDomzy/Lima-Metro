@@ -1,0 +1,7 @@
+city,country,metro_system,population_M,metro_km,daily_pax_K,pax_per_km,lines,cost_per_km_USD_M,bc_ratio,year_opened,population_density_corridor,fare_integration,bus_feeding,notes
+Medellín,Colombia,Metro de Medellín,4.0,31.3,500,15974,2,60,1.4,1995,8500,Full,Extensive,"Pionero LATAM, integración tarifaria completa, urbanismo social"
+Santiago,Chile,Metro de Santiago,7.0,149.0,2500,16779,7,120,1.2,1975,7000,Full (Red),Full integration,"Red más extensa de Sudamérica, expansión continua"
+Ciudad de México,México,Metro CDMX,22.0,226.0,4500,19912,12,80,1.8,1969,12000,"Partial (STC, Metrobús, Tren Ligero)",Moderate,"Alta densidad de demanda, subsidio estatal significativo"
+Bogotá,Colombia,TransMilenio (BRT) + Metro (2028),8.0,114.0,2400,21053,12,15,2.1,2000,10000,Full (SITP),Extensive,"BRT más exitoso del mundo, metro en construcción (L1 2028)"
+Lima (actual),Perú,Línea 1 + L2 parcial,11.0,42.0,800,19048,2,85,0.9,2011,9500,None,Limited,"Sin integración tarifaria, demanda alta en L1"
+Lima (propuesta),Perú,Red 6L + 2 trenes,11.0,627.0,1637,2611,8,73,0.16,2030,6000,Proposed,Proposed,Nuestra estimación: red extensa pero baja densidad de demanda

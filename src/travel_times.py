@@ -1,0 +1,127 @@
+import numpy as np
+import pandas as pd
+from config import CRS_PROJECTED, PROCESSED_DATA
+
+SPEED_CAR_KMH = 25
+SPEED_BUS_KMH = 15
+SPEED_METRO_KMH = 35
+SPEED_TRAIN_KMH = 80
+ACCESS_WALK_SPEED_KMH = 4.5
+WAITING_TIME_MIN = 5
+
+def _haversine(lat1, lon1, lat2, lon2):
+    R = 6371
+    dlat = np.radians(lat2 - lat1)
+    dlon = np.radians(lon2 - lon1)
+    a = np.sin(dlat/2)**2 + np.cos(np.radians(lat1))*np.cos(np.radians(lat2))*np.sin(dlon/2)**2
+    return 2 * R * np.arcsin(np.sqrt(a))
+
+def compute_haversine_matrix(zones_gdf):
+    n = len(zones_gdf)
+    lats = zones_gdf.geometry.y.values.astype(float)
+    lons = zones_gdf.geometry.x.values.astype(float)
+    dist = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            dist[i, j] = _haversine(lats[i], lons[i], lats[j], lons[j])
+    return dist
+
+def compute_drive_times(zones_gdf):
+    km = compute_haversine_matrix(zones_gdf)
+    time = km * 1.4 / SPEED_CAR_KMH * 60
+    np.fill_diagonal(time, 0)
+    return time
+
+def compute_bus_times(drive_times):
+    return np.where(np.isfinite(drive_times),
+                    drive_times * SPEED_CAR_KMH / SPEED_BUS_KMH + WAITING_TIME_MIN, np.inf)
+
+def compute_metro_times(zones_gdf, stations_gdf, scenario="base"):
+    n = len(zones_gdf)
+    km = compute_haversine_matrix(zones_gdf)
+
+    if scenario == "base":
+        active = stations_gdf[stations_gdf["status"].isin(["existing", "partial"])]
+    else:
+        active = stations_gdf
+
+    print(f"   Estaciones activas: {len(active)}")
+    zones_proj = zones_gdf.to_crs(CRS_PROJECTED)
+    stations_proj = active.to_crs(CRS_PROJECTED)
+
+    min_dist_km = np.zeros(n)
+    for i, (_, zrow) in enumerate(zones_proj.iterrows()):
+        pt = zrow.geometry
+        dists = stations_proj.distance(pt).values
+        min_dist_m = dists.min()
+        min_dist_km[i] = min_dist_m / 1000.0
+
+    print(f"   Distancia mínima promedio a estación: {min_dist_km.mean():.2f} km")
+    print(f"   Rango: {min_dist_km.min():.2f} - {min_dist_km.max():.2f} km")
+
+    times = np.zeros((n, n))
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                times[i, j] = 0
+                continue
+            access_time = (min_dist_km[i] + min_dist_km[j]) / ACCESS_WALK_SPEED_KMH * 60
+            line_haul = km[i, j] * 0.85 / SPEED_METRO_KMH * 60
+            if scenario == "base" and km[i, j] > 20:
+                line_haul *= 1.4
+            times[i, j] = access_time + line_haul + WAITING_TIME_MIN
+
+    return times
+
+def compute_train_times(zones_gdf):
+    n = len(zones_gdf)
+    km = compute_haversine_matrix(zones_gdf)
+    times = np.full((n, n), np.inf)
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                times[i, j] = 0
+            elif km[i, j] > 50:
+                times[i, j] = km[i, j] / SPEED_TRAIN_KMH * 60 + 30
+            else:
+                times[i, j] = np.inf
+    return times
+
+def build_travel_time_matrices(zones_gdf, stations_gdf, lines_gdf=None, G_drive=None):
+    zone_ids = zones_gdf["zone_id"].tolist()
+
+    print("\n[1/4] Matriz auto (haversine + factor)...")
+    t_car = compute_drive_times(zones_gdf)
+
+    print("[2/4] Matriz bus...")
+    t_bus = compute_bus_times(t_car)
+
+    print("[3/4] Matrices metro (base y full)...")
+    t_metro_base = compute_metro_times(zones_gdf, stations_gdf, scenario="base")
+    t_metro_full = compute_metro_times(zones_gdf, stations_gdf, scenario="full")
+
+    print("[4/4] Matriz tren...")
+    t_train = compute_train_times(zones_gdf)
+
+    matrices = {"car": t_car, "bus": t_bus, "metro_base": t_metro_base,
+                "metro_full": t_metro_full, "train": t_train}
+
+    for name, mat in matrices.items():
+        pd.DataFrame(mat, index=zone_ids, columns=zone_ids).to_csv(
+            PROCESSED_DATA / f"tt_{name}.csv")
+        valid = np.isfinite(mat).sum()
+        avg = mat[np.isfinite(mat)].mean() if valid > 0 else 0
+        print(f"  {name}: media={avg:.1f} min, finitos={valid}/{len(zone_ids)**2}")
+
+    return matrices
+
+
+if __name__ == "__main__":
+    import sys, os
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import geopandas as gpd
+
+    zones = gpd.read_file(str(PROCESSED_DATA / "zones.gpkg"), layer="zones")
+    stations = gpd.read_file(str(PROCESSED_DATA / "stations.gpkg"), layer="stations")
+
+    build_travel_time_matrices(zones, stations)
