@@ -37,16 +37,17 @@ def run_phase2():
 
     # 3. Travel time matrices
     print("\n[2/6] Matrices de tiempo de viaje...")
-    # Try loading OSM graph; if unavailable, use synthetic distances
-    try:
-        import osmnx as ox
-        G = ox.load_graphml(str(RAW_DATA / "lima_drive.graphml"))
-        print("  Red OSM cargada correctamente")
-    except Exception as e:
-        print(f"  Usando distancias sintéticas (OSM no disponible: {e})")
-        G = None
+    G = None
+    USE_OSM_ROUTING = False
+    if USE_OSM_ROUTING:
+        try:
+            import osmnx as ox
+            G = ox.load_graphml(str(RAW_DATA / "lima_drive.graphml"))
+            print("  Red OSM cargada correctamente")
+        except Exception as e:
+            print(f"  OSM no disponible: {e}")
 
-    tt_matrices = build_travel_time_matrices(zones, stations, None, G)
+    tt_matrices = build_travel_time_matrices(zones, stations, None, G, use_osm=USE_OSM_ROUTING)
 
     # 4. Demand estimation
     print("\n[3/6] Estimando demanda base...")

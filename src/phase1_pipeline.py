@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from config import PROCESSED_DATA, FIGURES, BUFFER_METERS, CRS_PROJECTED
+from config import RAW_DATA, PROCESSED_DATA, FIGURES, BUFFER_METERS, CRS_PROJECTED
 from stations import build_stations_gdf, build_lines_gdf
 from data_osm import download_lima_network, download_lima_buildings
 from data_gtfs import download_gtfs_lima, load_gtfs_trips, build_synthetic_gtfs
@@ -46,18 +46,33 @@ def run_phase1():
     total_buffer_km2 = buffer_union.area / 1e6
     print(f"  Área total cubierta por buffers (800 m): {total_buffer_km2:.1f} km²")
 
-    # 3. OSM data
+    # 3. OSM data (opcional - timeoutea si la ciudad es muy grande)
     print("\n[3/5] Descargando datos OSM...")
-    try:
-        G = download_lima_network()
-    except Exception as e:
-        print(f"  Error descargando red: {e}")
-        G = None
-    try:
-        buildings = download_lima_buildings()
-        print(f"  Edificios descargados: {len(buildings)}")
-    except Exception as e:
-        print(f"  Error descargando edificios: {e}")
+    G = None
+    buildings = None
+    osm_path = RAW_DATA / "lima_drive.graphml"
+    if osm_path.exists():
+        print("  Red OSM ya existe, saltando descarga.")
+    else:
+        import signal
+        class TimeoutError(Exception):
+            pass
+
+        def handler(signum, frame):
+            raise TimeoutError("Descarga OSM agotó el tiempo límite")
+
+        signal.signal(signal.SIGALRM, handler)
+        signal.alarm(120)
+        try:
+            G = download_lima_network()
+            buildings = download_lima_buildings()
+            print(f"  Edificios descargados: {len(buildings)}")
+        except TimeoutError:
+            print("  [SKIP] Descarga OSM excede 120s. Se usará modo sin OSM.")
+        except Exception as e:
+            print(f"  Error descargando datos OSM: {e}")
+        finally:
+            signal.alarm(0)
 
     # 4. GTFS
     print("\n[4/5] Datos GTFS...")

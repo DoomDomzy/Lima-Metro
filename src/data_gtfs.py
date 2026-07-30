@@ -67,7 +67,13 @@ def download_gtfs_lima():
         print(f"GTFS ya existe en {zip_path}")
         return zip_path
 
-    print("No se pudo descargar GTFS real. Se usará dataset sintético basado en estaciones definidas.")
+    print("=" * 60)
+    print("GTFS REAL NO DISPONIBLE: La ATU (Autoridad de Transporte Urbano")
+    print("para Lima y Callao) no publica un feed GTFS público. No se encontró")
+    print("el feed en Mobility Database ni Transitland. Solo hay datos agregados")
+    print("de validaciones en https://sistemas.protransporte.gob.pe/DatosAbiertos/")
+    print("=" * 60)
+    print("Generando GTFS sintético desde estaciones definidas en stations.py...")
     return None
 
 def load_gtfs_trips(zip_path):

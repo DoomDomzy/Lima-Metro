@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
-from config import CRS_PROJECTED, PROCESSED_DATA
+import osmnx as ox
+import networkx as nx
+from config import CRS_PROJECTED, CRS_GEOGRAPHIC, RAW_DATA, PROCESSED_DATA
 
 SPEED_CAR_KMH = 25
 SPEED_BUS_KMH = 15
@@ -26,7 +28,68 @@ def compute_haversine_matrix(zones_gdf):
             dist[i, j] = _haversine(lats[i], lons[i], lats[j], lons[j])
     return dist
 
-def compute_drive_times(zones_gdf):
+def load_osm_graph():
+    path = RAW_DATA / "lima_drive.graphml"
+    if path.exists():
+        print(f"   Cargando red OSM desde {path}...")
+        return ox.load_graphml(str(path))
+    return None
+
+def _add_travel_time(G, default_speed_kmh=40):
+    for u, v, k, d in G.edges(data=True, keys=True):
+        if "travel_time" not in d:
+            if "length" in d and d["length"] > 0:
+                speed = default_speed_kmh
+                if "maxspeed" in d:
+                    ms = d["maxspeed"]
+                    if isinstance(ms, list):
+                        ms = ms[0]
+                    try:
+                        speed = float(ms)
+                    except (ValueError, TypeError):
+                        speed = default_speed_kmh
+                d["travel_time"] = d["length"] / (speed / 3.6)
+            else:
+                d["travel_time"] = 1
+    return G
+
+def compute_drive_times_osm(zones_gdf, G):
+    G = _add_travel_time(G)
+    from config import CRS_GEOGRAPHIC
+    zones_geo = zones_gdf.to_crs(CRS_GEOGRAPHIC) if zones_gdf.crs != CRS_GEOGRAPHIC else zones_gdf
+    n = len(zones_geo)
+    times = np.full((n, n), np.inf)
+    nodes = []
+    for _, row in zones_geo.iterrows():
+        pt = (row.geometry.y, row.geometry.x)
+        node = ox.nearest_nodes(G, pt[1], pt[0])
+        nodes.append(node)
+
+    print(f"   {n} nodos de zona encontrados en el grafo OSM")
+    succeeded = 0
+    for i in range(n):
+        times[i, i] = 0
+        for j in range(i + 1, n):
+            try:
+                route = nx.shortest_path(G, nodes[i], nodes[j], weight="travel_time")
+                time_sec = sum(
+                    G.edges[route[k], route[k + 1], 0].get("travel_time", 0)
+                    for k in range(len(route) - 1)
+                )
+                if time_sec > 0:
+                    times[i, j] = time_sec / 60
+                    times[j, i] = time_sec / 60
+                    succeeded += 1
+            except nx.NetworkXNoPath:
+                pass
+    print(f"   Rutas calculadas: {succeeded} de {n*(n-1)//2}")
+    return times
+
+def compute_drive_times(zones_gdf, G=None):
+    if G is not None:
+        print("   Usando routing OSM...")
+        return compute_drive_times_osm(zones_gdf, G)
+    print("   Usando haversine + factor de congestión...")
     km = compute_haversine_matrix(zones_gdf)
     time = km * 1.4 / SPEED_CAR_KMH * 60
     np.fill_diagonal(time, 0)
@@ -87,11 +150,20 @@ def compute_train_times(zones_gdf):
                 times[i, j] = np.inf
     return times
 
-def build_travel_time_matrices(zones_gdf, stations_gdf, lines_gdf=None, G_drive=None):
+def build_travel_time_matrices(zones_gdf, stations_gdf, lines_gdf=None, G_drive=None, use_osm=False):
     zone_ids = zones_gdf["zone_id"].tolist()
 
-    print("\n[1/4] Matriz auto (haversine + factor)...")
-    t_car = compute_drive_times(zones_gdf)
+    if use_osm:
+        if G_drive is None:
+            G_drive = load_osm_graph()
+        if G_drive is not None:
+            print("   Red OSM cargada. Usando routing real para autos.")
+        else:
+            print("   Red OSM no disponible. Usando haversine.")
+            use_osm = False
+
+    print(f"\n[1/4] Matriz auto{' (OSM routing)' if use_osm and G_drive else ' (haversine)'}...")
+    t_car = compute_drive_times(zones_gdf, G=G_drive if use_osm else None)
 
     print("[2/4] Matriz bus...")
     t_bus = compute_bus_times(t_car)
