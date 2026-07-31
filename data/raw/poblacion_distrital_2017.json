@@ -1,0 +1,692 @@
+[
+  {
+    "ubigeo": "070101",
+    "name": "CALLAO",
+    "censada": 451260,
+    "total": 479418
+  },
+  {
+    "ubigeo": "070102",
+    "name": "BELLAVISTA",
+    "censada": 74851,
+    "total": 77679
+  },
+  {
+    "ubigeo": "070103",
+    "name": "CARMEN DE LA LEGUA REYNOSO",
+    "censada": 42240,
+    "total": 44377
+  },
+  {
+    "ubigeo": "070104",
+    "name": "LA PERLA",
+    "censada": 61417,
+    "total": 62387
+  },
+  {
+    "ubigeo": "070105",
+    "name": "LA PUNTA",
+    "censada": 3829,
+    "total": 3926
+  },
+  {
+    "ubigeo": "070106",
+    "name": "VENTANILLA",
+    "censada": 315600,
+    "total": 331119
+  },
+  {
+    "ubigeo": "070107",
+    "name": "MI PERÚ",
+    "censada": 45297,
+    "total": 48047
+  },
+  {
+    "ubigeo": "110101",
+    "name": "ICA",
+    "censada": 150280,
+    "total": 155247
+  },
+  {
+    "ubigeo": "110102",
+    "name": "LA TINGUIÑA",
+    "censada": 39574,
+    "total": 41583
+  },
+  {
+    "ubigeo": "110103",
+    "name": "LOS AQUIJES",
+    "censada": 21963,
+    "total": 22882
+  },
+  {
+    "ubigeo": "110104",
+    "name": "OCUCAJE",
+    "censada": 4392,
+    "total": 4683
+  },
+  {
+    "ubigeo": "110105",
+    "name": "PACHACUTEC",
+    "censada": 7411,
+    "total": 7583
+  },
+  {
+    "ubigeo": "110106",
+    "name": "PARCONA",
+    "censada": 54047,
+    "total": 56767
+  },
+  {
+    "ubigeo": "110107",
+    "name": "PUEBLO NUEVO",
+    "censada": 6395,
+    "total": 6640
+  },
+  {
+    "ubigeo": "110108",
+    "name": "SALAS",
+    "censada": 25767,
+    "total": 26734
+  },
+  {
+    "ubigeo": "110109",
+    "name": "SAN JOSE DE LOS MOLINOS",
+    "censada": 6987,
+    "total": 7385
+  },
+  {
+    "ubigeo": "110110",
+    "name": "SAN JUAN BAUTISTA",
+    "censada": 13846,
+    "total": 14514
+  },
+  {
+    "ubigeo": "110111",
+    "name": "SANTIAGO",
+    "censada": 27645,
+    "total": 28637
+  },
+  {
+    "ubigeo": "110112",
+    "name": "SUBTANJALLA",
+    "censada": 27387,
+    "total": 28595
+  },
+  {
+    "ubigeo": "110113",
+    "name": "TATE",
+    "censada": 4709,
+    "total": 4834
+  },
+  {
+    "ubigeo": "110114",
+    "name": "YAUCA DEL ROSARIO",
+    "censada": 1116,
+    "total": 1202
+  },
+  {
+    "ubigeo": "110201",
+    "name": "CHINCHA ALTA",
+    "censada": 66349,
+    "total": 71579
+  },
+  {
+    "ubigeo": "110202",
+    "name": "ALTO LARAN",
+    "censada": 7783,
+    "total": 8085
+  },
+  {
+    "ubigeo": "110203",
+    "name": "CHAVIN",
+    "censada": 2071,
+    "total": 2110
+  },
+  {
+    "ubigeo": "110204",
+    "name": "CHINCHA BAJA",
+    "censada": 13009,
+    "total": 13787
+  },
+  {
+    "ubigeo": "110205",
+    "name": "EL CARMEN",
+    "censada": 12369,
+    "total": 13173
+  },
+  {
+    "ubigeo": "110206",
+    "name": "GROCIO PRADO",
+    "censada": 25294,
+    "total": 26507
+  },
+  {
+    "ubigeo": "110207",
+    "name": "PUEBLO NUEVO",
+    "censada": 62604,
+    "total": 67054
+  },
+  {
+    "ubigeo": "110208",
+    "name": "SAN JUAN DE YANAC",
+    "censada": 1129,
+    "total": 1259
+  },
+  {
+    "ubigeo": "110209",
+    "name": "SAN PEDRO DE HUACARPANA",
+    "censada": 992,
+    "total": 1032
+  },
+  {
+    "ubigeo": "110210",
+    "name": "SUNAMPE",
+    "censada": 29079,
+    "total": 30286
+  },
+  {
+    "ubigeo": "110211",
+    "name": "TAMBO DE MORA",
+    "censada": 5434,
+    "total": 6012
+  },
+  {
+    "ubigeo": "150101",
+    "name": "LIMA",
+    "censada": 268352,
+    "total": 273142
+  },
+  {
+    "ubigeo": "150102",
+    "name": "ANCON",
+    "censada": 62928,
+    "total": 67232
+  },
+  {
+    "ubigeo": "150103",
+    "name": "ATE",
+    "censada": 599196,
+    "total": 624172
+  },
+  {
+    "ubigeo": "150104",
+    "name": "BARRANCO",
+    "censada": 34378,
+    "total": 35379
+  },
+  {
+    "ubigeo": "150105",
+    "name": "BREÑA",
+    "censada": 85309,
+    "total": 90414
+  },
+  {
+    "ubigeo": "150106",
+    "name": "CARABAYLLO",
+    "censada": 333045,
+    "total": 350989
+  },
+  {
+    "ubigeo": "150107",
+    "name": "CHACLACAYO",
+    "censada": 42912,
+    "total": 43400
+  },
+  {
+    "ubigeo": "150108",
+    "name": "CHORRILLOS",
+    "censada": 314241,
+    "total": 339701
+  },
+  {
+    "ubigeo": "150109",
+    "name": "CIENEGUILLA",
+    "censada": 34684,
+    "total": 35884
+  },
+  {
+    "ubigeo": "150110",
+    "name": "COMAS",
+    "censada": 520450,
+    "total": 553537
+  },
+  {
+    "ubigeo": "150111",
+    "name": "EL AGUSTINO",
+    "censada": 198862,
+    "total": 212165
+  },
+  {
+    "ubigeo": "150112",
+    "name": "INDEPENDENCIA",
+    "censada": 211360,
+    "total": 219163
+  },
+  {
+    "ubigeo": "150113",
+    "name": "JESUS MARIA",
+    "censada": 75359,
+    "total": 77955
+  },
+  {
+    "ubigeo": "150114",
+    "name": "LA MOLINA",
+    "censada": 140679,
+    "total": 153614
+  },
+  {
+    "ubigeo": "150115",
+    "name": "LA VICTORIA",
+    "censada": 173630,
+    "total": 189083
+  },
+  {
+    "ubigeo": "150116",
+    "name": "LINCE",
+    "censada": 54711,
+    "total": 58460
+  },
+  {
+    "ubigeo": "150117",
+    "name": "LOS OLIVOS",
+    "censada": 325884,
+    "total": 343878
+  },
+  {
+    "ubigeo": "150118",
+    "name": "LURIGANCHO",
+    "censada": 240814,
+    "total": 256294
+  },
+  {
+    "ubigeo": "150119",
+    "name": "LURIN",
+    "censada": 89195,
+    "total": 97503
+  },
+  {
+    "ubigeo": "150120",
+    "name": "MAGDALENA DEL MAR",
+    "censada": 60290,
+    "total": 61656
+  },
+  {
+    "ubigeo": "150121",
+    "name": "MAGDALENA VIEJA",
+    "censada": 83323,
+    "total": 89199
+  },
+  {
+    "ubigeo": "150122",
+    "name": "MIRAFLORES",
+    "censada": 99337,
+    "total": 103090
+  },
+  {
+    "ubigeo": "150123",
+    "name": "PACHACAMAC",
+    "censada": 110071,
+    "total": 121982
+  },
+  {
+    "ubigeo": "150124",
+    "name": "PUCUSANA",
+    "censada": 14891,
+    "total": 15125
+  },
+  {
+    "ubigeo": "150125",
+    "name": "PUENTE PIEDRA",
+    "censada": 329675,
+    "total": 354351
+  },
+  {
+    "ubigeo": "150126",
+    "name": "PUNTA HERMOSA",
+    "censada": 15874,
+    "total": 16797
+  },
+  {
+    "ubigeo": "150127",
+    "name": "PUNTA NEGRA",
+    "censada": 7074,
+    "total": 7506
+  },
+  {
+    "ubigeo": "150128",
+    "name": "RIMAC",
+    "censada": 174785,
+    "total": 179011
+  },
+  {
+    "ubigeo": "150129",
+    "name": "SAN BARTOLO",
+    "censada": 7482,
+    "total": 8005
+  },
+  {
+    "ubigeo": "150130",
+    "name": "SAN BORJA",
+    "censada": 113247,
+    "total": 121793
+  },
+  {
+    "ubigeo": "150131",
+    "name": "SAN ISIDRO",
+    "censada": 60735,
+    "total": 65333
+  },
+  {
+    "ubigeo": "150132",
+    "name": "SAN JUAN DE LURIGANCHO",
+    "censada": 1038495,
+    "total": 1114319
+  },
+  {
+    "ubigeo": "150133",
+    "name": "SAN JUAN DE MIRAFLORES",
+    "censada": 355219,
+    "total": 401098
+  },
+  {
+    "ubigeo": "150134",
+    "name": "SAN LUIS",
+    "censada": 52082,
+    "total": 55418
+  },
+  {
+    "ubigeo": "150135",
+    "name": "SAN MARTIN DE PORRES",
+    "censada": 654083,
+    "total": 704999
+  },
+  {
+    "ubigeo": "150136",
+    "name": "SAN MIGUEL",
+    "censada": 155384,
+    "total": 162589
+  },
+  {
+    "ubigeo": "150137",
+    "name": "SANTA ANITA",
+    "censada": 196214,
+    "total": 213072
+  },
+  {
+    "ubigeo": "150138",
+    "name": "SANTA MARIA DEL MAR",
+    "censada": 999,
+    "total": 1049
+  },
+  {
+    "ubigeo": "150139",
+    "name": "SANTA ROSA",
+    "censada": 27863,
+    "total": 29271
+  },
+  {
+    "ubigeo": "150140",
+    "name": "SANTIAGO DE SURCO",
+    "censada": 329152,
+    "total": 378978
+  },
+  {
+    "ubigeo": "150141",
+    "name": "SURQUILLO",
+    "censada": 91023,
+    "total": 97652
+  },
+  {
+    "ubigeo": "150142",
+    "name": "VILLA EL SALVADOR",
+    "censada": 393254,
+    "total": 414000
+  },
+  {
+    "ubigeo": "150143",
+    "name": "VILLA MARIA DEL TRIUNFO",
+    "censada": 398433,
+    "total": 424064
+  },
+  {
+    "ubigeo": "150501",
+    "name": "SAN VICENTE DE CAÑETE",
+    "censada": 54775,
+    "total": 59602
+  },
+  {
+    "ubigeo": "150502",
+    "name": "ASIA",
+    "censada": 9784,
+    "total": 10225
+  },
+  {
+    "ubigeo": "150503",
+    "name": "CALANGO",
+    "censada": 2269,
+    "total": 2501
+  },
+  {
+    "ubigeo": "150504",
+    "name": "CERRO AZUL",
+    "censada": 8328,
+    "total": 8707
+  },
+  {
+    "ubigeo": "150505",
+    "name": "CHILCA",
+    "censada": 21573,
+    "total": 22536
+  },
+  {
+    "ubigeo": "150506",
+    "name": "COAYLLO",
+    "censada": 1043,
+    "total": 1095
+  },
+  {
+    "ubigeo": "150507",
+    "name": "IMPERIAL",
+    "censada": 38925,
+    "total": 40257
+  },
+  {
+    "ubigeo": "150508",
+    "name": "LUNAHUANA",
+    "censada": 4393,
+    "total": 4414
+  },
+  {
+    "ubigeo": "150509",
+    "name": "MALA",
+    "censada": 32717,
+    "total": 34213
+  },
+  {
+    "ubigeo": "150510",
+    "name": "NUEVO IMPERIAL",
+    "censada": 26233,
+    "total": 27440
+  },
+  {
+    "ubigeo": "150511",
+    "name": "PACARAN",
+    "censada": 1686,
+    "total": 1779
+  },
+  {
+    "ubigeo": "150512",
+    "name": "QUILMANA",
+    "censada": 16091,
+    "total": 16543
+  },
+  {
+    "ubigeo": "150513",
+    "name": "SAN ANTONIO",
+    "censada": 4343,
+    "total": 4643
+  },
+  {
+    "ubigeo": "150514",
+    "name": "SAN LUIS",
+    "censada": 13436,
+    "total": 13631
+  },
+  {
+    "ubigeo": "150515",
+    "name": "SANTA CRUZ DE FLORES",
+    "censada": 3103,
+    "total": 3210
+  },
+  {
+    "ubigeo": "150516",
+    "name": "ZUÑIGA",
+    "censada": 1314,
+    "total": 1457
+  },
+  {
+    "ubigeo": "150601",
+    "name": "HUARAL",
+    "censada": 99915,
+    "total": 107026
+  },
+  {
+    "ubigeo": "150602",
+    "name": "ATAVILLOS ALTO",
+    "censada": 687,
+    "total": 751
+  },
+  {
+    "ubigeo": "150603",
+    "name": "ATAVILLOS BAJO",
+    "censada": 902,
+    "total": 976
+  },
+  {
+    "ubigeo": "150604",
+    "name": "AUCALLAMA",
+    "censada": 19464,
+    "total": 21044
+  },
+  {
+    "ubigeo": "150605",
+    "name": "CHANCAY",
+    "censada": 56920,
+    "total": 61618
+  },
+  {
+    "ubigeo": "150606",
+    "name": "IHUARI",
+    "censada": 2037,
+    "total": 2253
+  },
+  {
+    "ubigeo": "150607",
+    "name": "LAMPIAN",
+    "censada": 336,
+    "total": 366
+  },
+  {
+    "ubigeo": "150608",
+    "name": "PACARAOS",
+    "censada": 1028,
+    "total": 1136
+  },
+  {
+    "ubigeo": "150609",
+    "name": "SAN MIGUEL DE ACOS",
+    "censada": 648,
+    "total": 692
+  },
+  {
+    "ubigeo": "150610",
+    "name": "SANTA CRUZ DE ANDAMARCA",
+    "censada": 830,
+    "total": 868
+  },
+  {
+    "ubigeo": "150611",
+    "name": "SUMBILCA",
+    "censada": 720,
+    "total": 793
+  },
+  {
+    "ubigeo": "150612",
+    "name": "VEINTISIETE DE NOVIEMBRE",
+    "censada": 411,
+    "total": 440
+  },
+  {
+    "ubigeo": "150801",
+    "name": "HUACHO",
+    "censada": 63142,
+    "total": 69421
+  },
+  {
+    "ubigeo": "150802",
+    "name": "AMBAR",
+    "censada": 2208,
+    "total": 2324
+  },
+  {
+    "ubigeo": "150803",
+    "name": "CALETA DE CARQUIN",
+    "censada": 8132,
+    "total": 8318
+  },
+  {
+    "ubigeo": "150804",
+    "name": "CHECRAS",
+    "censada": 929,
+    "total": 1011
+  },
+  {
+    "ubigeo": "150805",
+    "name": "HUALMAY",
+    "censada": 28765,
+    "total": 29672
+  },
+  {
+    "ubigeo": "150806",
+    "name": "HUAURA",
+    "censada": 34764,
+    "total": 37162
+  },
+  {
+    "ubigeo": "150807",
+    "name": "LEONCIO PRADO",
+    "censada": 1867,
+    "total": 2058
+  },
+  {
+    "ubigeo": "150808",
+    "name": "PACCHO",
+    "censada": 1516,
+    "total": 1693
+  },
+  {
+    "ubigeo": "150809",
+    "name": "SANTA LEONOR",
+    "censada": 775,
+    "total": 822
+  },
+  {
+    "ubigeo": "150810",
+    "name": "SANTA MARIA",
+    "censada": 36267,
+    "total": 38679
+  },
+  {
+    "ubigeo": "150811",
+    "name": "SAYAN",
+    "censada": 23408,
+    "total": 25209
+  },
+  {
+    "ubigeo": "150812",
+    "name": "VEGUETA",
+    "censada": 25912,
+    "total": 27228
+  }
+]

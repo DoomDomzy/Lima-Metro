@@ -1,8 +1,14 @@
-data/raw/lima_buildings.gpkg
-data/raw/lima_drive.graphml
+# Datos crudos pesados o volátiles (no se versionan)
 data/raw/*.gpkg
 data/raw/*.graphml
 data/raw/*.rar
 data/raw/*.pdf
 data/raw/distritos/
-data/raw/*.json
+data/raw/lima_buildings.gpkg-journal
+
+# Cachés de descargas grandes (OSM, GTFS)
+cache/
+
+# Artefactos de Python
+__pycache__/
+*.pyc
