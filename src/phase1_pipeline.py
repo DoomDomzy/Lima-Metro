@@ -6,7 +6,7 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from config import RAW_DATA, PROCESSED_DATA, FIGURES, BUFFER_METERS, CRS_PROJECTED
+from config import RAW_DATA, PROCESSED_DATA, BUFFER_METERS, CRS_PROJECTED
 from stations import build_stations_gdf, build_lines_gdf
 from data_osm import download_lima_network, download_lima_buildings
 from data_gtfs import download_gtfs_lima, load_gtfs_trips, build_synthetic_gtfs
@@ -16,6 +16,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 
+from viz_style import configure_matplotlib, save_fig, PALETTE, TEXT
+
 
 def run_phase1():
     print("=" * 60)
@@ -23,6 +25,7 @@ def run_phase1():
     print("=" * 60)
 
     matplotlib.use("Agg")
+    configure_matplotlib()
 
     # 1. Stations
     print("\n[1/5] Construyendo estaciones...")
@@ -87,40 +90,34 @@ def run_phase1():
     fig, ax = plt.subplots(1, 1, figsize=(12, 14))
 
     status_colors = {
-        "existing": "#2E86AB",
-        "partial": "#A23B72",
-        "proposed": "#F18F01",
+        "existing": PALETTE[0],
+        "partial": PALETTE[2],
+        "proposed": PALETTE[4],
     }
     for status, color in status_colors.items():
         subset = lines_proj[lines_proj["status"] == status]
         if not subset.empty:
             subset.plot(ax=ax, color=color, linewidth=2.5, label=status, alpha=0.8)
     stations_proj.plot(
-        ax=ax, color="black", markersize=8, alpha=0.7, label="Estaciones"
+        ax=ax, color=TEXT, markersize=8, alpha=0.7, label="Estaciones"
     )
-    ax.legend(fontsize=10)
+    ax.legend(fontsize=10, frameon=False)
     ax.set_title("Red Ferroviaria Propuesta para Lima Metropolitana", fontsize=14)
     ax.set_axis_off()
 
-    map_path = FIGURES / "red_ferroviaria_propuesta.png"
-    fig.savefig(map_path, dpi=150, bbox_inches="tight")
-    print(f"  Mapa 1: {map_path}")
-    plt.close()
+    save_fig(fig, "red_ferroviaria_propuesta.png")
 
     # Buffer coverage map
     fig2, ax2 = plt.subplots(1, 1, figsize=(12, 14))
     buffer_dissolved = gpd.GeoSeries([buffer_union], crs=CRS_PROJECTED)
-    buffer_dissolved.plot(ax=ax2, color="#A23B72", alpha=0.3, label="Buffers 800m")
-    lines_proj.plot(ax=ax2, color="#2E86AB", linewidth=2, alpha=0.8, label="Líneas")
-    stations_proj.plot(ax=ax2, color="black", markersize=6, alpha=0.7)
-    ax2.legend(fontsize=10)
+    buffer_dissolved.plot(ax=ax2, color=PALETTE[2], alpha=0.3, label="Buffers 800m")
+    lines_proj.plot(ax=ax2, color=PALETTE[0], linewidth=2, alpha=0.8, label="Líneas")
+    stations_proj.plot(ax=ax2, color="#2B2B33", markersize=6, alpha=0.7)
+    ax2.legend(fontsize=10, frameon=False)
     ax2.set_title("Cobertura de Estaciones (Buffers de 800 m)", fontsize=14)
     ax2.set_axis_off()
 
-    buf_map_path = FIGURES / "buffer_coverage.png"
-    fig2.savefig(buf_map_path, dpi=150, bbox_inches="tight")
-    print(f"  Mapa 2: {buf_map_path}")
-    plt.close()
+    save_fig(fig2, "buffer_coverage.png")
 
     summary = stations.groupby(["line_name", "status"]).size().reset_index(name="stations")
     print("\nResumen de estaciones:")

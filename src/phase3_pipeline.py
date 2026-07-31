@@ -6,18 +6,21 @@ import sys, os, warnings
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 warnings.filterwarnings("ignore")
 
-from config import PROCESSED_DATA, FIGURES
+from config import PROCESSED_DATA
 import pandas as pd
 import geopandas as gpd
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from viz_style import configure_matplotlib, save_fig, PALETTE
+
 
 def run_phase3():
     print("=" * 60)
     print("FASE 3: Evaluación de Impactos")
     print("=" * 60)
+    configure_matplotlib()
 
     # Load shared data
     trip_gen = pd.read_csv(PROCESSED_DATA / "trip_generation.csv")
@@ -30,7 +33,7 @@ def run_phase3():
     from congestion import compute_congestion_impact
     from cost_benefit import (
         compute_social_benefits, compute_investment_cost, compute_cost_benefit,
-        LINE_LENGTHS
+        LINE_LENGTHS, METRO_COST_PER_KM, TRAIN_COST_PER_KM
     )
     from land_value import simulate_land_values, plot_land_value
 
@@ -73,12 +76,54 @@ def run_phase3():
 
     cb_base = compute_cost_benefit(benefits, total_inv, "Red Completa")
 
+    pd.DataFrame([{
+        "indicador": "beneficio_anual_total",
+        "valor": benefits["annual_total"],
+        "unidad": "S/ anual",
+    }, {
+        "indicador": "ahorro_tiempo_anual",
+        "valor": benefits["annual_time"],
+        "unidad": "S/ anual",
+    }, {
+        "indicador": "accidentes_anual",
+        "valor": benefits["annual_accidents"],
+        "unidad": "S/ anual",
+    }, {
+        "indicador": "co2_anual",
+        "valor": benefits["annual_co2"],
+        "unidad": "S/ anual",
+    }, {
+        "indicador": "combustible_anual",
+        "valor": benefits["annual_fuel"],
+        "unidad": "S/ anual",
+    }, {
+        "indicador": "operacion_buses_anual",
+        "valor": benefits["annual_bus_ops"],
+        "unidad": "S/ anual",
+    }, {
+        "indicador": "npv_beneficios_30yr",
+        "valor": cb_base["npv_benefits"],
+        "unidad": "S/",
+    }, {
+        "indicador": "npv_costos_30yr",
+        "valor": cb_base["npv_costs"],
+        "unidad": "S/",
+    }, {
+        "indicador": "inversion_total",
+        "valor": cb_base["total_investment"],
+        "unidad": "S/",
+    }, {
+        "indicador": "bc_red_completa",
+        "valor": cb_base["bc_ratio"],
+        "unidad": "razón",
+    }]).to_csv(PROCESSED_DATA / "bc_network.csv", index=False)
+
     # Per-line B/C
     print("\n--- B/C por línea ---")
     line_results = []
     total_km = sum(LINE_LENGTHS.values())
     for lid, km in LINE_LENGTHS.items():
-        inv_km = 50_000_000 if lid in ["TREN_ICA", "TREN_NORTE"] else 150_000_000
+        inv_km = TRAIN_COST_PER_KM if lid in ["TREN_ICA", "TREN_NORTE"] else METRO_COST_PER_KM
         inv = km * inv_km * 3.7
         pax_share = km / total_km
         line_benefits = benefits["npv_benefit_30yr"] * pax_share
@@ -105,7 +150,7 @@ def run_phase3():
 
     # Summary chart
     fig, axes = plt.subplots(1, 3, figsize=(16, 5))
-    colors = ["#2E86AB", "#A23B72", "#F18F01"]
+    colors = PALETTE[:3]
 
     # Congestion
     ax = axes[0]
@@ -119,9 +164,9 @@ def run_phase3():
     ax = axes[1]
     bc_vals = bc_df.sort_values("km")["B/C"].values
     bc_labels = bc_df.sort_values("km")["Línea"].values
-    cols = [colors[i % 3] for i in range(len(bc_vals))]
+    cols = [PALETTE[0] if v < 1 else PALETTE[3] for v in bc_vals]
     ax.barh(bc_labels, bc_vals, color=cols)
-    ax.axvline(1.0, color="red", linestyle="--", alpha=0.5, label="Umbral rentabilidad")
+    ax.axvline(1.0, color=PALETTE[4], linestyle="--", alpha=0.5, label="Umbral rentabilidad")
     ax.set_xlabel("Relación B/C")
     ax.set_title("Costo-Beneficio por Línea")
     ax.legend(fontsize=8)
@@ -134,9 +179,7 @@ def run_phase3():
     ax.set_title("Top 10 distritos - plusvalía")
 
     fig.tight_layout()
-    fig.savefig(str(FIGURES / "phase3_summary.png"), dpi=150)
-    plt.close()
-    print(f"\nGráfico resumen: {FIGURES / 'phase3_summary.png'}")
+    save_fig(fig, "phase3_summary.png")
 
     print("\n" + "=" * 60)
     print("FASE 3 completada.")

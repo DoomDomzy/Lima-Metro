@@ -22,15 +22,17 @@ def compute_haversine_matrix(zones_gdf):
     n = len(zones_gdf)
     lats = zones_gdf.geometry.y.values.astype(float)
     lons = zones_gdf.geometry.x.values.astype(float)
-    dist = np.zeros((n, n))
-    for i in range(n):
-        for j in range(n):
-            dist[i, j] = _haversine(lats[i], lons[i], lats[j], lons[j])
-    return dist
+    dlat = np.radians(lats[:, None] - lats[None, :])
+    dlon = np.radians(lons[:, None] - lons[None, :])
+    la1 = np.radians(lats)[:, None]
+    la2 = np.radians(lats)[None, :]
+    a = np.sin(dlat/2)**2 + np.cos(la1)*np.cos(la2)*np.sin(dlon/2)**2
+    return 2 * 6371 * np.arcsin(np.sqrt(a))
 
 def load_osm_graph():
     path = RAW_DATA / "lima_drive.graphml"
-    if path.exists():
+    from data_osm import cache_is_fresh
+    if path.exists() and cache_is_fresh():
         print(f"   Cargando red OSM desde {path}...")
         return ox.load_graphml(str(path))
     return None
@@ -85,12 +87,13 @@ def compute_drive_times_osm(zones_gdf, G):
     print(f"   Rutas calculadas: {succeeded} de {n*(n-1)//2}")
     return times
 
-def compute_drive_times(zones_gdf, G=None):
+def compute_drive_times(zones_gdf, G=None, km=None):
     if G is not None:
         print("   Usando routing OSM...")
         return compute_drive_times_osm(zones_gdf, G)
     print("   Usando haversine + factor de congestión...")
-    km = compute_haversine_matrix(zones_gdf)
+    if km is None:
+        km = compute_haversine_matrix(zones_gdf)
     time = km * 1.4 / SPEED_CAR_KMH * 60
     np.fill_diagonal(time, 0)
     return time
@@ -99,9 +102,10 @@ def compute_bus_times(drive_times):
     return np.where(np.isfinite(drive_times),
                     drive_times * SPEED_CAR_KMH / SPEED_BUS_KMH + WAITING_TIME_MIN, np.inf)
 
-def compute_metro_times(zones_gdf, stations_gdf, scenario="base"):
+def compute_metro_times(zones_gdf, stations_gdf, scenario="base", km=None):
     n = len(zones_gdf)
-    km = compute_haversine_matrix(zones_gdf)
+    if km is None:
+        km = compute_haversine_matrix(zones_gdf)
 
     if scenario == "base":
         active = stations_gdf[stations_gdf["status"].isin(["existing", "partial"])]
@@ -112,42 +116,31 @@ def compute_metro_times(zones_gdf, stations_gdf, scenario="base"):
     zones_proj = zones_gdf.to_crs(CRS_PROJECTED)
     stations_proj = active.to_crs(CRS_PROJECTED)
 
-    min_dist_km = np.zeros(n)
-    for i, (_, zrow) in enumerate(zones_proj.iterrows()):
-        pt = zrow.geometry
-        dists = stations_proj.distance(pt).values
-        min_dist_m = dists.min()
-        min_dist_km[i] = min_dist_m / 1000.0
+    zone_pts = np.asarray(zones_proj.geometry.values)
+    station_pts = np.asarray(stations_proj.geometry.values)
+    from shapely import distance
+    dist = distance(zone_pts[:, None], station_pts[None, :])
+    min_dist_km = np.nanmin(dist, axis=1) / 1000.0
 
     print(f"   Distancia mínima promedio a estación: {min_dist_km.mean():.2f} km")
     print(f"   Rango: {min_dist_km.min():.2f} - {min_dist_km.max():.2f} km")
 
-    times = np.zeros((n, n))
-    for i in range(n):
-        for j in range(n):
-            if i == j:
-                times[i, j] = 0
-                continue
-            access_time = (min_dist_km[i] + min_dist_km[j]) / ACCESS_WALK_SPEED_KMH * 60
-            line_haul = km[i, j] * 0.85 / SPEED_METRO_KMH * 60
-            if scenario == "base" and km[i, j] > 20:
-                line_haul *= 1.4
-            times[i, j] = access_time + line_haul + WAITING_TIME_MIN
-
+    access_time = (min_dist_km[:, None] + min_dist_km[None, :]) / ACCESS_WALK_SPEED_KMH * 60
+    line_haul = km * 0.85 / SPEED_METRO_KMH * 60
+    if scenario == "base":
+        line_haul = np.where(km > 20, line_haul * 1.4, line_haul)
+    times = access_time + line_haul + WAITING_TIME_MIN
+    np.fill_diagonal(times, 0)
     return times
 
-def compute_train_times(zones_gdf):
+def compute_train_times(zones_gdf, km=None):
     n = len(zones_gdf)
-    km = compute_haversine_matrix(zones_gdf)
+    if km is None:
+        km = compute_haversine_matrix(zones_gdf)
     times = np.full((n, n), np.inf)
-    for i in range(n):
-        for j in range(n):
-            if i == j:
-                times[i, j] = 0
-            elif km[i, j] > 50:
-                times[i, j] = km[i, j] / SPEED_TRAIN_KMH * 60 + 30
-            else:
-                times[i, j] = np.inf
+    mask = km > 50
+    times[mask] = km[mask] / SPEED_TRAIN_KMH * 60 + 30
+    np.fill_diagonal(times, 0)
     return times
 
 def build_travel_time_matrices(zones_gdf, stations_gdf, lines_gdf=None, G_drive=None, use_osm=False):
@@ -163,17 +156,18 @@ def build_travel_time_matrices(zones_gdf, stations_gdf, lines_gdf=None, G_drive=
             use_osm = False
 
     print(f"\n[1/4] Matriz auto{' (OSM routing)' if use_osm and G_drive else ' (haversine)'}...")
-    t_car = compute_drive_times(zones_gdf, G=G_drive if use_osm else None)
+    km = compute_haversine_matrix(zones_gdf)
+    t_car = compute_drive_times(zones_gdf, G=G_drive if use_osm else None, km=km)
 
     print("[2/4] Matriz bus...")
     t_bus = compute_bus_times(t_car)
 
     print("[3/4] Matrices metro (base y full)...")
-    t_metro_base = compute_metro_times(zones_gdf, stations_gdf, scenario="base")
-    t_metro_full = compute_metro_times(zones_gdf, stations_gdf, scenario="full")
+    t_metro_base = compute_metro_times(zones_gdf, stations_gdf, scenario="base", km=km)
+    t_metro_full = compute_metro_times(zones_gdf, stations_gdf, scenario="full", km=km)
 
     print("[4/4] Matriz tren...")
-    t_train = compute_train_times(zones_gdf)
+    t_train = compute_train_times(zones_gdf, km=km)
 
     matrices = {"car": t_car, "bus": t_bus, "metro_base": t_metro_base,
                 "metro_full": t_metro_full, "train": t_train}

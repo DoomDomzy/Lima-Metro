@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
-from config import PROCESSED_DATA, FIGURES
-import matplotlib.pyplot as plt
+from config import PROCESSED_DATA
 
 VOT_PER_HOUR = 10.0
 ACCIDENT_COST_PER_KM = 0.10
@@ -61,7 +60,17 @@ def compute_social_benefits(metro_pax, train_pax, scenario_label):
     npv = sum(annual_total / (1 + DISCOUNT_RATE) ** t for t in range(1, YEARS + 1))
     print(f"  VAN Beneficios (30 años, {DISCOUNT_RATE*100:.0f}%): S/{npv:,.0f}")
 
-    return {"annual_total": annual_total, "npv_benefit_30yr": npv}
+    return {
+        "annual_total": annual_total,
+        "npv_benefit_30yr": npv,
+        "annual_time": annual_time,
+        "annual_accidents": annual_accidents,
+        "annual_co2": annual_co2,
+        "annual_fuel": annual_fuel,
+        "annual_bus_ops": annual_bus_ops,
+        "hours_saved": hours_saved,
+        "vehicle_km_saved": vehicle_km_saved,
+    }
 
 def compute_investment_cost(line_ids=None):
     total = 0

@@ -17,11 +17,7 @@ def load_inei_population():
         return {r["ubigeo"]: r for r in json.load(f)}
 
 
-def build_zones_gdf(pop_data=None):
-    if pop_data is None:
-        pop_data = load_inei_population()
-
-    ZONES = [
+ZONES = [
         {"zone_id": "Z01", "district": "Lima (Cercado)",
          "ubigeos": ["150101"],
          "employment_rate": 1.10,
@@ -145,26 +141,45 @@ def build_zones_gdf(pop_data=None):
         {"zone_id": "Z25", "district": "Chancay / Huacho (Norte)",
          "ubigeos": ["150801", "150802", "150803", "150804", "150805", "150806",
                       "150807", "150808", "150809", "150810", "150811", "150812",
-                      "150601", "150602", "150603", "150604"],
+                      "150601", "150602", "150603", "150604",
+                      "150605", "150606", "150607", "150608", "150609",
+                      "150610", "150611", "150612"],
          "employment_rate": 0.25,
          "lon": -77.500, "lat": -11.250},
 
         {"zone_id": "Z26", "district": "Cañete / Chincha (Sur)",
          "ubigeos": ["150501", "150502", "150503", "150504", "150505",
                       "150506", "150507", "150508", "150509", "150510",
-                      "150511", "150512", "150513", "150514", "150515", "150516"],
+                      "150511", "150512", "150513", "150514", "150515", "150516",
+                      "110201", "110202", "110203", "110204", "110205",
+                      "110206", "110207", "110208", "110209", "110210", "110211"],
          "employment_rate": 0.22,
          "lon": -76.250, "lat": -13.200},
 
         {"zone_id": "Z27", "district": "Ica",
-         "ubigeos": ["200101", "200102", "200103", "200104", "200105",
-                      "200106", "200107", "200108", "200109", "200110",
-                      "200111", "200112", "200113", "200114", "200115"],
+         "ubigeos": ["110101", "110102", "110103", "110104", "110105",
+                      "110106", "110107", "110108", "110109", "110110",
+                      "110111", "110112", "110113", "110114"],
          "employment_rate": 0.30,
          "lon": -75.770, "lat": -14.060},
     ]
 
+
+def build_zones_gdf(pop_data=None):
+    if pop_data is None:
+        pop_data = load_inei_population()
+
     rows = []
+    if pop_data is not None:
+        data_keys = set(pop_data.keys())
+        declared = set()
+        for z in ZONES:
+            declared.update(z["ubigeos"])
+        unmapped = declared - data_keys
+        if unmapped:
+            raise ValueError(
+                f"Ubigeos declarados en ZONES que no existen en la fuente INEI: {sorted(unmapped)}"
+            )
     for z in ZONES:
         if pop_data:
             pop = sum(pop_data[ub]["total"] for ub in z["ubigeos"] if ub in pop_data)
@@ -191,6 +206,11 @@ def load_district_boundaries():
         gdf = gpd.read_file(path, layer="districts")
         if gdf.crs is None:
             gdf.set_crs(CRS_GEOGRAPHIC, inplace=True)
+        if not gdf.is_valid.all():
+            n_invalid = int((~gdf.is_valid).sum())
+            raise ValueError(
+                f"Geometrías de distritos inválidas: {n_invalid} (auto-intersecciones o topología rota)"
+            )
         return gdf
     return None
 

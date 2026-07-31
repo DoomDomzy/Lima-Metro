@@ -6,7 +6,7 @@ import sys, os, warnings
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 warnings.filterwarnings("ignore")
 
-from config import PROCESSED_DATA, FIGURES, RAW_DATA
+from config import PROCESSED_DATA, RAW_DATA
 from zones import build_zones_gdf, build_trip_generation, assign_stations_to_zones
 from travel_times import build_travel_time_matrices
 from demand_model import estimate_demand, compute_line_demand
@@ -16,11 +16,14 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
+from viz_style import configure_matplotlib, save_fig, PALETTE
+
 
 def run_phase2():
     print("=" * 60)
     print("FASE 2: Estimación de Demanda")
     print("=" * 60)
+    configure_matplotlib()
 
     # 1. Zones
     print("\n[1/6] Creando sistema de zonas...")
@@ -79,17 +82,15 @@ def run_phase2():
     fig, ax = plt.subplots(figsize=(8, 5))
     x = range(len(summary))
     width = 0.3
-    ax.bar([i - width/2 for i in x], summary["Metro (pax/día)"], width, label="Metro", color="#2E86AB")
-    ax.bar([i + width/2 for i in x], summary["Total TP (pax/día)"], width, label="Total TP", color="#F18F01", alpha=0.7)
+    ax.bar([i - width/2 for i in x], summary["Metro (pax/día)"], width, label="Metro", color=PALETTE[0])
+    ax.bar([i + width/2 for i in x], summary["Total TP (pax/día)"], width, label="Total TP", color=PALETTE[4], alpha=0.7)
     ax.set_xticks(list(x))
     ax.set_xticklabels(summary["Escenario"], fontsize=9)
     ax.set_ylabel("Pasajeros / día")
     ax.set_title("Comparación de Demanda: Base vs Red Propuesta")
-    ax.legend()
+    ax.legend(frameon=False)
     fig.tight_layout()
-    fig.savefig(str(FIGURES / "demand_comparison.png"), dpi=150)
-    plt.close()
-    print(f"  Gráfico: {FIGURES / 'demand_comparison.png'}")
+    save_fig(fig, "demand_comparison.png")
 
     # Validación L1
     l1_pax_base = line_demand[line_demand["line_id"] == "L1"]["daily_pax"].values
@@ -99,6 +100,10 @@ def run_phase2():
         print(f"  Estimado: {l1_pax_base[0]:,.0f} pax/día")
         print(f"  Real: 700,000 pax/día")
         print(f"  Precisión: {l1_vs_real:.1f}%")
+        pd.DataFrame([{
+            "line_id": "L1", "estimado_pax_dia": int(l1_pax_base[0]),
+            "real_pax_dia": 700000, "precision_pct": round(l1_vs_real, 1)
+        }]).to_csv(PROCESSED_DATA / "l1_validation.csv", index=False)
 
     print("\n" + "=" * 60)
     print("FASE 2 completada.")

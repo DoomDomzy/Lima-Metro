@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
-from config import PROCESSED_DATA, FIGURES
-import matplotlib.pyplot as plt
+from config import PROCESSED_DATA
 
 VOT_PER_HOUR = 10.0
 BETA_TIME = -0.10
@@ -46,20 +45,13 @@ def doubly_constrained_gravity(O, D, cost, beta=0.02, max_iter=500, tol=1e-3):
     Bj = np.ones(n)
 
     for it in range(max_iter):
-        Ai = np.zeros(n)
-        for i in range(n):
-            s = np.sum(Bj * D * friction[i, :])
-            Ai[i] = 1.0 / s if s > 1e-15 else 0.0
+        s_i = friction @ (Bj * D)
+        Ai = np.where(s_i > 1e-15, 1.0 / s_i, 0.0)
 
-        Bj_new = np.zeros(n)
-        for j in range(n):
-            s = np.sum(Ai * O * friction[:, j])
-            Bj_new[j] = 1.0 / s if s > 1e-15 else 0.0
+        s_j = (Ai * O) @ friction
+        Bj_new = np.where(s_j > 1e-15, 1.0 / s_j, 0.0)
 
-        T = np.zeros((n, n))
-        for i in range(n):
-            for j in range(n):
-                T[i, j] = Ai[i] * Bj_new[j] * O[i] * D[j] * friction[i, j]
+        T = (Ai * O)[:, None] * (Bj_new * D)[None, :] * friction
 
         O_calc = T.sum(axis=1)
         O_safe = np.where(O == 0, 1, O)
@@ -88,10 +80,14 @@ def estimate_demand(travel_time_matrices, trip_generation_df, scenario="base"):
                            travel_time_matrices[metro_key], 999)
 
     train_raw = travel_time_matrices["train"]
+    if scenario == "base":
+        train_raw = np.full_like(train_raw, np.inf)
     tt["train"] = np.where(np.isfinite(train_raw), train_raw, 999)
 
     print(f"\n>> {label}")
     print(f"   Tiempo metro promedio: {tt['metro'].mean():.1f} min")
+    if scenario == "base":
+        print("   Tren de cercanías NO disponible en el escenario base")
 
     T_dist = {}
     betas = {"car": 0.020, "bus": 0.015, "metro": 0.018, "train": 0.008}
@@ -99,7 +95,10 @@ def estimate_demand(travel_time_matrices, trip_generation_df, scenario="base"):
     for mode in ["car", "bus", "metro", "train"]:
         T_dist[mode] = doubly_constrained_gravity(O, D, tt[mode], beta=betas[mode])
 
-    u = compute_mode_utilities(tt["car"], tt["bus"], tt["metro"], tt["train"])
+    u = compute_mode_utilities(
+        tt["car"], tt["bus"], tt["metro"],
+        tt["train"] if scenario == "full" else np.full_like(tt["train"], np.inf),
+    )
     shares = compute_mode_shares(u)
 
     T_metro = T_dist["metro"] * shares["metro"] * SCALING_FACTOR
@@ -121,25 +120,19 @@ def compute_line_demand(T_metro_matrix, stations_gdf, zones_gdf, zone_assignment
         on=["station_name", "line_id"], how="left")
 
     z_ids = zones_gdf["zone_id"].tolist()
+    z_index = {zid: i for i, zid in enumerate(z_ids)}
     n_zones = len(z_ids)
 
-    station_counts = stations_zone.groupby(["zone_id", "line_id"]).size().reset_index(name="n_stations")
-
-    line_zone_pax = np.zeros((len(lines := stations_zone["line_id"].unique()), n_zones))
+    lines = stations_zone["line_id"].unique()
     line_zone_pax_sum = np.zeros(len(lines))
 
     for li, line_id in enumerate(lines):
         line_zones = stations_zone[stations_zone["line_id"] == line_id]["zone_id"].unique()
-        for zi in line_zones:
-            if zi in z_ids:
-                i = z_ids.index(zi)
-                for zj in line_zones:
-                    if zj in z_ids:
-                        j = z_ids.index(zj)
-                        if i < T_metro_matrix.shape[0] and j < T_metro_matrix.shape[1]:
-                            val = T_metro_matrix[i, j]
-                            if np.isfinite(val):
-                                line_zone_pax_sum[li] += val
+        ix = np.array([z_index[zi] for zi in line_zones if zi in z_index], dtype=int)
+        if ix.size == 0:
+            continue
+        block = T_metro_matrix[np.ix_(ix, ix)]
+        line_zone_pax_sum[li] = np.nansum(block)
 
     results = pd.DataFrame({"line_id": lines, "daily_pax": line_zone_pax_sum})
     results = results.sort_values("daily_pax", ascending=False).reset_index(drop=True)

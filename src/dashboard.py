@@ -48,9 +48,11 @@ def load_data():
         data["zones"] = gpd.read_file(str(PROCESSED_DATA / "zones.gpkg"), layer="zones")
         data["congestion"] = pd.read_csv(str(PROCESSED_DATA / "congestion_impact.csv"))
         data["bc"] = pd.read_csv(str(PROCESSED_DATA / "bc_per_line.csv"))
+        data["bc_network"] = pd.read_csv(str(PROCESSED_DATA / "bc_network.csv"))
         data["land_value"] = pd.read_csv(str(PROCESSED_DATA / "land_value_results.csv"))
         data["benchmark"] = pd.read_csv(str(PROCESSED_DATA / "benchmark_data.csv"))
         data["demand"] = pd.read_csv(str(PROCESSED_DATA / "demand_comparison.csv"))
+        data["l1_validation"] = pd.read_csv(str(PROCESSED_DATA / "l1_validation.csv"))
         data["trip_gen"] = pd.read_csv(str(PROCESSED_DATA / "trip_generation.csv"))
     except Exception as e:
         st.error(f"Error cargando datos: {e}")
@@ -89,9 +91,9 @@ if page == "📊 Resumen General":
     vehicles_removed = safe_int(congestion.loc[congestion["Métrica"].str.contains("retirados", case=False, na=False), "Red Completa"].values[0]) if len(congestion) > 0 else 0
     col3.metric("Vehículos retirados", f"{vehicles_removed:,}")
 
-    bc_data = data["bc"]
-    bc_avg = bc_data["B/C"].mean() if len(bc_data) > 0 else 0
-    col4.metric("B/C promedio", f"{bc_avg:.2f}")
+    bc_data = data["bc_network"]
+    bc_net_val = float(bc_data.loc[bc_data["indicador"] == "bc_red_completa", "valor"].iloc[0]) if len(bc_data) > 0 else 0
+    col4.metric("B/C red completa", f"{bc_net_val:.2f}")
 
     st.subheader("Estaciones y Líneas")
     stations = data["stations"]
@@ -106,13 +108,34 @@ if page == "📊 Resumen General":
         col2.write(f"  - {l['line_name']} ({l['status']})")
 
     st.subheader("Resultados Clave por Fase")
-    st.markdown("""
+    stations = data["stations"]
+    buffers = stations.copy()
+    buffers["geometry"] = stations.geometry.buffer(800)
+    coverage_km2 = buffers.geometry.union_all().area / 1e6
+
+    full_metro = safe_int(full_row.get("Metro (pax/día)", full_row.get("Metro", 0)))
+    full_total = safe_int(full_row.get("Total TP (pax/día)", full_row.get("Total_TP", 0)))
+    hours_saved = safe_int(congestion.loc[
+        congestion["Métrica"].str.contains("Horas ahorradas", case=False, na=False),
+        "Red Completa"].values[0]) if len(congestion) > 0 else 0
+    veh_removed = safe_int(congestion.loc[
+        congestion["Métrica"].str.contains("retirados", case=False, na=False),
+        "Red Completa"].values[0]) if len(congestion) > 0 else 0
+    bc_net = data["bc_network"]
+    bc_ratio = float(bc_net.loc[bc_net["indicador"] == "bc_red_completa", "valor"].iloc[0]) if len(bc_net) > 0 else 0
+    l1_val = data["l1_validation"]
+    l1_pct = float(l1_val["precision_pct"].iloc[0]) if len(l1_val) > 0 else float("nan")
+    bench = data["benchmark"]
+    lima_act = bench.loc[bench["city"] == "Lima (actual)", "pax_per_km"].iloc[0] if len(bench) > 0 else 0
+    lima_prop = bench.loc[bench["city"] == "Lima (propuesta)", "pax_per_km"].iloc[0] if len(bench) > 0 else 0
+
+    st.markdown(f"""
     | Fase | Hallazgo Principal |
     |------|-------------------|
-    | **Fase 1 — GIS** | 72 estaciones, 115 km² de cobertura (buffers 800m) |
-    | **Fase 2 — Demanda** | 699K pax/día (red completa) — validación L1: 83% |
-    | **Fase 3 — Impactos** | 736K horas/día ahorradas, 205K vehículos retirados, B/C=0.16 |
-    | **Fase 4 — Benchmarking** | Lima actual tiene buena intensidad (19K pax/km/día). Red propuesta es demasiado extensa |
+    | **Fase 1 — GIS** | {len(stations)} estaciones, {coverage_km2:.0f} km² de cobertura (buffers 800m) |
+    | **Fase 2 — Demanda** | {full_metro:,} pax/día metro (red completa), {full_total:,} TP/día — validación L1: {l1_pct:.1f}% |
+    | **Fase 3 — Impactos** | {hours_saved:,} horas/día ahorradas, {veh_removed:,} vehículos retirados, B/C={bc_ratio:.2f} |
+    | **Fase 4 — Benchmarking** | Lima actual: {lima_act:,} pax/km/día; red propuesta: {lima_prop:,} pax/km/día |
     """)
 
 # ───────────────────────────────────────────────
@@ -210,21 +233,26 @@ elif page == "💰 Costo-Beneficio":
         st.image(str(fig_bc), use_container_width=True)
 
     st.subheader("Componentes del Beneficio Social Anual")
-    st.markdown(f"""
-    | Componente | Valor |
-    |-----------|------|
-    | Ahorro de tiempo | S/ ~2.7B/año |
-    | Reducción de accidentes | S/ ~179M/año |
-    | Reducción de CO₂ | S/ ~22M/año |
-    | Ahorro combustible | S/ ~538M/año |
-    | Ahorro operación buses | S/ ~315M/año |
-    | **Total anual** | **S/ ~3.7B/año** |
-    """)
+    bnet = data["bc_network"]
+    if len(bnet) > 0:
+        def val(indicador):
+            return float(bnet.loc[bnet["indicador"] == indicador, "valor"].iloc[0])
+        b_total = val("beneficio_anual_total")
+        st.markdown(f"""
+        | Componente | Valor anual |
+        |-----------|------|
+        | Ahorro de tiempo | S/ {val('ahorro_tiempo_anual'):,.0f} |
+        | Reducción de accidentes | S/ {val('accidentes_anual'):,.0f} |
+        | Reducción de CO₂ | S/ {val('co2_anual'):,.0f} |
+        | Ahorro combustible | S/ {val('combustible_anual'):,.0f} |
+        | Ahorro operación buses | S/ {val('operacion_buses_anual'):,.0f} |
+        | **Total anual** | **S/ {b_total:,.0f}** |
+        """)
 
-    st.warning("""
-    **B/C = 0.16**: La red completa de 8 líneas no supera el umbral de rentabilidad (1.0).
-    Se recomienda construcción por fases, priorizando líneas de alta densidad como L3 y Tren Lima-Ica.
-    """)
+        st.warning(f"""
+        **B/C = {bc_ratio:.2f}**: La red completa de 8 líneas no supera el umbral de rentabilidad (1.0).
+        Se recomienda construcción por fases, priorizando líneas de alta densidad como L3 y Tren Lima-Ica.
+        """)
 
     st.subheader("Costo de Inversión por km")
     cost_fig = FIGURES / "benchmark_cost_per_km.png"

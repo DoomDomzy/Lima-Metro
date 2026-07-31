@@ -1,3 +1,7 @@
+import hashlib
+import json
+from pathlib import Path
+
 import numpy as np
 if not hasattr(np, 'float_'):
     np.float_ = np.float64
@@ -5,6 +9,29 @@ if not hasattr(np, 'float_'):
 import osmnx as ox
 import geopandas as gpd
 from config import LIMA_BBOX, PROCESSED_DATA, RAW_DATA
+
+
+def _cache_key():
+    src = Path(__file__).read_text()
+    return hashlib.sha256((src + repr(LIMA_BBOX)).encode()).hexdigest()[:12]
+
+
+def _cache_meta_path():
+    return RAW_DATA / "lima_drive.graphml.meta.json"
+
+
+def save_cache_meta():
+    _cache_meta_path().write_text(json.dumps({"cache_key": _cache_key()}))
+
+
+def cache_is_fresh():
+    meta = _cache_meta_path()
+    if not meta.exists():
+        return False
+    try:
+        return json.loads(meta.read_text()).get("cache_key") == _cache_key()
+    except (json.JSONDecodeError, OSError):
+        return False
 
 def download_lima_network():
     print("Descargando red vial de Lima Metropolitana...")
@@ -15,6 +42,7 @@ def download_lima_network():
     )
     print(f"Red vial: {len(G.nodes)} nodos, {len(G.edges)} aristas")
     ox.save_graphml(G, str(RAW_DATA / "lima_drive.graphml"))
+    save_cache_meta()
     print("Guardado en data/raw/lima_drive.graphml")
     return G
 

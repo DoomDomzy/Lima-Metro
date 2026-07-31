@@ -1,7 +1,9 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from config import PROCESSED_DATA, FIGURES
+from config import PROCESSED_DATA
+
+from viz_style import configure_matplotlib, save_fig, PALETTE, NEUTRAL_GRAYS, PRIMARY, HIGHLIGHT, TEXT
 
 BENCHMARK_DATA = [
     {
@@ -89,111 +91,129 @@ BENCHMARK_DATA = [
         "bus_feeding": "Limited",
         "notes": "Sin integración tarifaria, demanda alta en L1",
     },
-    {
-        "city": "Lima (propuesta)",
-        "country": "Perú",
-        "metro_system": "Red 6L + 2 trenes",
-        "population_M": 11.0,
-        "metro_km": 627,
-        "daily_pax_K": 1637,
-        "pax_per_km": 2611,
-        "lines": 8,
-        "cost_per_km_USD_M": 73,
-        "bc_ratio": 0.16,
-        "year_opened": 2030,
-        "population_density_corridor": 6000,
-        "fare_integration": "Proposed",
-        "bus_feeding": "Proposed",
-        "notes": "Nuestra estimación: red extensa pero baja densidad de demanda",
-    },
 ]
 
+_LIMA_PROPUESTA_STATIC = {
+    "city": "Lima (propuesta)",
+    "country": "Perú",
+    "metro_system": "Red 6L + 2 trenes",
+    "population_M": 11.0,
+    "metro_km": 627.0,
+    "lines": 8,
+    "year_opened": 2030,
+    "population_density_corridor": 6000,
+    "fare_integration": "Proposed",
+    "bus_feeding": "Proposed",
+    "notes": "Estimación del modelo de demanda del estudio",
+}
+
+def _lima_propuesta_metrics():
+    dc_path = PROCESSED_DATA / "demand_comparison.csv"
+    if not dc_path.exists():
+        raise FileNotFoundError(
+            "No se encuentra demand_comparison.csv — ejecute phase2_pipeline.py primero."
+        )
+    dc = pd.read_csv(dc_path)
+    row = dc[dc["Escenario"].str.contains("Red Propuesta", na=False)].iloc[0]
+    metro = float(row["Metro (pax/día)"])
+    train = float(row["Tren (pax/día)"])
+    return metro, train, metro + train
 
 def build_benchmark_df():
-    return pd.DataFrame(BENCHMARK_DATA)
+    df = pd.DataFrame(BENCHMARK_DATA)
+    metro, train, total = _lima_propuesta_metrics()
+    row = dict(_LIMA_PROPUESTA_STATIC)
+    row["daily_pax_K"] = round(total / 1000)
+    row["pax_per_km"] = int(round(total / row["metro_km"]))
+
+    from cost_benefit import compute_social_benefits, compute_investment_cost, compute_cost_benefit, PENUSD
+    benefits = compute_social_benefits(metro, train, "Lima (propuesta)")
+    total_inv, _ = compute_investment_cost()
+    cb = compute_cost_benefit(benefits, total_inv, "Lima (propuesta)")
+    row["bc_ratio"] = round(cb["bc_ratio"], 2)
+    row["cost_per_km_USD_M"] = int(round(total_inv / PENUSD / 1e6 / row["metro_km"]))
+    return pd.concat([df, pd.DataFrame([row])], ignore_index=True)
 
 def plot_ridership_intensity(benchmark_df):
+    configure_matplotlib()
     fig, ax = plt.subplots(figsize=(10, 6))
-    colors = ["#2E86AB", "#A23B72", "#F18F01", "#4CAF50", "#E91E63", "#9C27B0"]
-    exclude = ["Lima (propuesta)"]
-    plot_df = benchmark_df[~benchmark_df["city"].isin(exclude)]
-    cities_plot = plot_df["city"].tolist() + ["Lima (propuesta)"]
-    colors_final = colors[:len(plot_df)] + ["red"]
+    other = benchmark_df[benchmark_df["city"] != "Lima (propuesta)"]
+    vals = other["pax_per_km"].tolist() + [
+        benchmark_df[benchmark_df["city"] == "Lima (propuesta)"]["pax_per_km"].iloc[0]
+    ]
+    labels = other["city"].tolist() + ["Lima\n(propuesta)"]
+    colors = NEUTRAL_GRAYS[:len(other)] + [PRIMARY]
 
-    vals = plot_df["pax_per_km"].tolist() + [benchmark_df[benchmark_df["city"]=="Lima (propuesta)"]["pax_per_km"].iloc[0]]
-    labels = plot_df["city"].tolist() + ["Lima\n(propuesta)"]
-
-    bars = ax.bar(range(len(vals)), vals, color=colors_final, alpha=0.8, width=0.6)
+    bars = ax.bar(range(len(vals)), vals, color=colors, alpha=0.9, width=0.6)
     for i, (bar, v) in enumerate(zip(bars, vals)):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 300,
-                f"{v:,.0f}", ha="center", fontsize=8, fontweight="bold" if i == len(vals)-1 else "normal")
+                f"{v:,.0f}", ha="center", fontsize=8,
+                fontweight="bold" if i == len(vals)-1 else "normal", color=TEXT)
     ax.set_xticks(range(len(vals)))
     ax.set_xticklabels(labels, fontsize=9)
     ax.set_ylabel("Pasajeros / km / día")
     ax.set_title("Intensidad de Uso: Pasajeros por km por Día")
-    ax.axhline(y=benchmark_df[benchmark_df["city"]=="Lima (actual)"]["pax_per_km"].iloc[0],
-               color="#E91E63", linestyle="--", alpha=0.5, label="Lima actual")
+    ax.axhline(y=benchmark_df[benchmark_df["city"] == "Lima (actual)"]["pax_per_km"].iloc[0],
+               color=NEUTRAL_GRAYS[0], linestyle="--", alpha=0.7, label="Lima actual")
     ax.legend(fontsize=8)
     fig.tight_layout()
-    fig.savefig(str(FIGURES / "benchmark_intensity.png"), dpi=150)
-    print(f"  {FIGURES / 'benchmark_intensity.png'}")
-    plt.close()
+    save_fig(fig, "benchmark_intensity.png")
 
 def plot_bc_comparison(benchmark_df):
+    configure_matplotlib()
     fig, ax = plt.subplots(figsize=(10, 6))
-    colors = ["#2E86AB", "#A23B72", "#F18F01", "#4CAF50", "#E91E63", "red"]
-    vals = benchmark_df["bc_ratio"].tolist()
-    labels = benchmark_df["city"].tolist()
-    bars = ax.bar(range(len(vals)), vals, color=colors, alpha=0.8, width=0.6)
+    other = benchmark_df[benchmark_df["city"] != "Lima (propuesta)"]
+    vals = other["bc_ratio"].tolist() + [
+        benchmark_df[benchmark_df["city"] == "Lima (propuesta)"]["bc_ratio"].iloc[0]
+    ]
+    labels = other["city"].tolist() + ["Lima\n(propuesta)"]
+    colors = NEUTRAL_GRAYS[:len(other)] + [PRIMARY]
+    bars = ax.bar(range(len(vals)), vals, color=colors, alpha=0.9, width=0.6)
     for bar, v in zip(bars, vals):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.05,
-                f"{v:.2f}", ha="center", fontsize=9, fontweight="bold")
-    ax.axhline(y=1.0, color="red", linestyle="--", alpha=0.5, label="Umbral rentabilidad (B/C=1)")
+                f"{v:.2f}", ha="center", fontsize=9, fontweight="bold", color=TEXT)
+    ax.axhline(y=1.0, color=HIGHLIGHT, linestyle="--", alpha=0.7, label="Umbral rentabilidad (B/C=1)")
     ax.set_xticks(range(len(vals)))
     ax.set_xticklabels(labels, fontsize=9)
     ax.set_ylabel("Relación Beneficio/Costo")
     ax.set_title("Comparación de Relación Beneficio/Costo")
     ax.legend(fontsize=8)
     fig.tight_layout()
-    fig.savefig(str(FIGURES / "benchmark_bc.png"), dpi=150)
-    print(f"  {FIGURES / 'benchmark_bc.png'}")
-    plt.close()
+    save_fig(fig, "benchmark_bc.png")
 
 def plot_cost_per_km(benchmark_df):
+    configure_matplotlib()
     fig, ax = plt.subplots(figsize=(10, 6))
-    colors = ["#2E86AB", "#A23B72", "#F18F01", "#4CAF50", "#E91E63", "red"]
     plot_df = benchmark_df[benchmark_df["city"] != "Bogotá"]
     vals = plot_df["cost_per_km_USD_M"].tolist()
-    vals.append(benchmark_df[benchmark_df["city"]=="Bogotá"]["cost_per_km_USD_M"].iloc[0])
+    vals.append(benchmark_df[benchmark_df["city"] == "Bogotá"]["cost_per_km_USD_M"].iloc[0])
     labels = plot_df["city"].tolist() + ["Bogotá\n(BRT)"]
-    cols = colors[:len(plot_df)] + ["#4CAF50"]
-    bars = ax.bar(range(len(vals)), vals, color=cols, alpha=0.8, width=0.6)
+    cols = PALETTE[:len(plot_df)] + [NEUTRAL_GRAYS[1]]
+    bars = ax.bar(range(len(vals)), vals, color=cols, alpha=0.9, width=0.6)
     for bar, v in zip(bars, vals):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
-                f"${v:.0f}M", ha="center", fontsize=8)
+                f"${v:.0f}M", ha="center", fontsize=8, color=TEXT)
     ax.set_xticks(range(len(vals)))
     ax.set_xticklabels(labels, fontsize=9)
     ax.set_ylabel("Costo por km (USD millones)")
     ax.set_title("Costo de Construcción por km")
     fig.tight_layout()
-    fig.savefig(str(FIGURES / "benchmark_cost_per_km.png"), dpi=150)
-    print(f"  {FIGURES / 'benchmark_cost_per_km.png'}")
-    plt.close()
+    save_fig(fig, "benchmark_cost_per_km.png")
 
 def plot_scatter(benchmark_df):
+    configure_matplotlib()
     fig, ax = plt.subplots(figsize=(10, 7))
     plot_df = benchmark_df[benchmark_df["city"] != "Lima (propuesta)"]
-    colors = ["#2E86AB", "#A23B72", "#F18F01", "#4CAF50", "#E91E63"]
 
     for i, (_, row) in enumerate(plot_df.iterrows()):
         size = row["daily_pax_K"] / 100
         ax.scatter(row["population_M"], row["pax_per_km"], s=size*30,
-                   c=colors[i], alpha=0.7, edgecolors="black", linewidth=0.5,
+                   c=PALETTE[i % len(PALETTE)], alpha=0.7, edgecolors=TEXT, linewidth=0.5,
                    label=f"{row['city']} ({row['daily_pax_K']:.0f}K pax/d)")
 
     lp = benchmark_df[benchmark_df["city"] == "Lima (propuesta)"].iloc[0]
     ax.scatter(lp["population_M"], lp["pax_per_km"], s=lp["daily_pax_K"]/100*30,
-               c="red", alpha=0.7, edgecolors="black", linewidth=1.5,
+               c=PRIMARY, alpha=0.9, edgecolors=TEXT, linewidth=1.5,
                marker="s", label=f"Lima propuesta ({lp['daily_pax_K']:.0f}K pax/d)")
 
     ax.set_xlabel("Población metropolitana (millones)")
@@ -202,9 +222,7 @@ def plot_scatter(benchmark_df):
     ax.legend(fontsize=8, loc="upper right")
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
-    fig.savefig(str(FIGURES / "benchmark_scatter.png"), dpi=150)
-    print(f"  {FIGURES / 'benchmark_scatter.png'}")
-    plt.close()
+    save_fig(fig, "benchmark_scatter.png")
 
 
 def print_benchmark_report(benchmark_df):

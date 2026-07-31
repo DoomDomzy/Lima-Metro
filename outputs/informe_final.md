@@ -16,12 +16,12 @@ Este estudio cuantifica el impacto de la red ferroviaria propuesta de 6 líneas 
 
 | Indicador | Valor | Nota |
 |-----------|-------|------|
-| Demanda metro red completa | **917,817 pax/día** | [ESTIMADO por modelo logit + gravitatorio] |
-| Validación Línea 1 | **85.6%** | Contra dato real de aforo ATU (700K/día) |
-| Horas ahorradas/día | **1,044,949 horas** | [ESTIMADO por modelo de demanda] |
-| Vehículos retirados | **290,264** | [ESTIMADO tasa ocupación 2.0 pax/veh] |
+| Demanda metro red completa | **938,264 pax/día** | [ESTIMADO por modelo logit + gravitatorio] |
+| Validación Línea 1 | **88.2%** | Contra dato real de aforo ATU (700K/día) |
+| Horas ahorradas/día | **1,041,559 horas** | [ESTIMADO por modelo de demanda] |
+| Vehículos retirados | **289,322** | [ESTIMADO tasa ocupación 2.0 pax/veh] |
 | Relación B/C (red completa) | **0.23** | [ESTIMADO costos referencia CAF/BID] |
-| Plusvalía total del suelo | **S/570 millones** | [ESTIMADO por analogía con CDMX/Bogotá] |
+| Plusvalía total del suelo | **S/754 millones** | [ESTIMADO por analogía con CDMX/Bogotá] |
 
 **Conclusión principal:** La red completa de 8 líneas (US$46B) no es económicamente viable como proyecto único (B/C=0.23). Se recomienda una estrategia por fases priorizando la Línea 3 (eje norte-sur) y el Tren Lima-Ica (mejor B/C individual: 0.43), implementando integración tarifaria como requisito previo.
 
@@ -58,7 +58,7 @@ Fase 1: Preparación GIS → Fase 2: Demanda → Fase 3: Impactos → Fase 4: Be
 
 | Variable | Estado | Fuente |
 |----------|--------|--------|
-| Población por distrito | REAL | INEI Censo 2017 — población total por ubigeo (43 distritos Lima + 7 Callao) |
+| Población por distrito | REAL | INEI Censo 2017 — población total por ubigeo (115 distritos del corredor Lima–Ica: Lima Metropolitana, Callao, Huaral, Huaura, Cañete, Chincha e Ica) |
 | Empleo por zona | ESTIMADO | Población INEI 2017 × tasa empleo/población específica por distrito |
 | Límites distritales | REAL | INEI 2017 (vía MINAM GeoServer) |
 | Estaciones de metro | REAL | Coordenadas verificadas en OSM (L1, L2); estimadas (L3-L6, trenes) |
@@ -75,20 +75,20 @@ Los valores de demanda para líneas propuestas (L3-L6, trenes) no pueden validar
 
 | Escenario | Metro (pax/día) | Tren (pax/día) | Total TP |
 |-----------|:--------------:|:--------------:|:--------:|
-| Base (L1 + L2 parcial) | 144,371 [ESTIMADO] | 1,404,292 [ESTIMADO] | 1,548,663 |
-| Red completa (6L + 2 trenes) | **917,817** [ESTIMADO] | 1,404,292 [ESTIMADO] | **2,322,109** |
-| *Incremento* | *+773,446* | *0* | *+773,446* |
+| Base (L1 + L2 parcial) | 140,335 [ESTIMADO] | 0 [sin trenes] | 140,335 |
+| Red completa (6L + 2 trenes) | **938,264** [ESTIMADO] | 1,376,311 [ESTIMADO] | **2,314,576** |
+| *Incremento* | *+797,929* | *+1,376,311* | *+2,174,241* |
 
-La validación contra datos reales de la Línea 1 (700K pax/día real) muestra una precisión del **85.6%** (modelo estimó: 598,860).
+La validación contra datos reales de la Línea 1 (700K pax/día real) muestra una precisión del **88.2%** (modelo estimó: 617,686 para el corredor L1 dentro de la red completa).
 
 ### 3.2 Congestión [ESTIMADO — derivado del modelo de demanda]
 
-La red completa transferiría **580,527 viajes/día desde el auto** (25% de los pasajeros TP), resultando en:
+La red completa transferiría **578,644 viajes/día desde el auto** (25% de los pasajeros TP), resultando en:
 
-- **1,044,949 horas ahorradas por día** [ESTIMADO]
-- **6.97M vehículos-km evitados por día** [ESTIMADO]
-- **290,264 vehículos retirados de circulación** [ESTIMADO — tasa ocupación 2.0 pax/veh]
-- **38,702 vehículos menos en hora punta** [ESTIMADO — factor punta 13.3%]
+- **1,041,559 horas ahorradas por día** [ESTIMADO]
+- **6.94M vehículos-km evitados por día** [ESTIMADO]
+- **289,322 vehículos retirados de circulación** [ESTIMADO — tasa ocupación 2.0 pax/veh]
+- **38,576 vehículos menos en hora punta** [ESTIMADO — factor punta 13.3%]
 
 ### 3.3 Costo-Beneficio Social [ESTIMADO — costos CAF/BID, beneficios del modelo de demanda]
 
@@ -96,14 +96,14 @@ La red completa transferiría **580,527 viajes/día desde el auto** (25% de los 
 
 | Componente | Beneficio anual |
 |-----------|:--------------:|
-| Ahorro de tiempo | S/ 3,814M |
-| Reducción accidentes | S/ 254M |
+| Ahorro de tiempo | S/ 3,802M |
+| Reducción accidentes | S/ 253M |
 | Reducción CO₂ | S/ 32M |
-| Ahorro combustible | S/ 763M |
-| Ahorro operación buses | S/ 448M |
-| **Total anual** | **S/ 5,310M** |
+| Ahorro combustible | S/ 760M |
+| Ahorro operación buses | S/ 446M |
+| **Total anual** | **S/ 5,293M** |
 
-**VAN Beneficios (30 años, 10%):** S/ 50,061M  
+**VAN Beneficios (30 años, 10%):** S/ 49,899M  
 **VAN Costos (inversión + O&M):** S/ 218,571M  
 **Relación B/C: 0.23**
 
@@ -120,7 +120,7 @@ La red completa transferiría **580,527 viajes/día desde el auto** (25% de los 
 
 ### 3.4 Valorización del Suelo [ESTIMADO por analogía con CDMX/Bogotá — modelo hedónico simplificado]
 
-La red generaría una **plusvalía total de S/ 570 millones** (US$154M), con una prima promedio de **3.4%** en zonas a menos de 800m de una estación. [ESTIMADO por analogía con CDMX/Bogotá]
+La red generaría una **plusvalía total de S/ 754 millones** (US$204M), con una prima promedio de **3.4%** en zonas a menos de 800m de una estación. [ESTIMADO por analogía con CDMX/Bogotá]
 
 **Distritos con mayor plusvalía:**
 - Miraflores / San Isidro
@@ -136,7 +136,7 @@ La red generaría una **plusvalía total de S/ 570 millones** (US$154M), con una
 | CDMX | 19,912 | 1.80 | Parcial |
 | Bogotá (BRT) | 21,053 | 2.10 | Full |
 | **Lima actual** | **19,048** | **0.90** | **None** |
-| **Lima propuesta** | **2,611** | **0.23** | **Propuesta** |
+| **Lima propuesta** | **3,692** | **0.23** | **Propuesta** |
 
 ## 4. Discusión
 
@@ -150,6 +150,7 @@ La red generaría una **plusvalía total de S/ 570 millones** (US$154M), con una
 
 ### 4.2 Limitaciones del estudio
 
+- **Escenario base como cota inferior de demanda metro**: el escenario base (L1 + L2 parcial, 35 estaciones) solo modela el corredor central, por lo que su demanda metro (140K pax/día) subestima el aforo real de la L1 (700K). La calibración del modelo se valida sobre el corredor L1 en la red completa (88.2%), no sobre el escenario base.
 - **GTFS sintético**: ATU no publica feed GTFS público. Las rutas y horarios se generan desde estaciones definidas, no de datos reales de operación.
 - **Matriz origen-destino sintética**: No se utilizó la Encuesta Domiciliaria de Viajes JICA (última disponible: 2012). Los viajes se distribuyen por modelo gravitatorio.
 - **Tiempos de viaje estimados**: Se usó distancia haversine con factores de congestión, no routing real sobre el grafo OSM.
@@ -162,7 +163,7 @@ La red generaría una **plusvalía total de S/ 570 millones** (US$154M), con una
 ## 5. Recomendaciones
 
 1. **Priorizar Línea 3** (Comas - San Juan de Miraflores): Eje norte-sur de alta densidad, sin cobertura actual de metro
-2. **Avanazar Tren Lima-Ica**: Mayor B/C individual (0.30), potencial de desarrollo regional
+2. **Avanzar Tren Lima-Ica**: Mayor B/C individual (0.43), potencial de desarrollo regional
 3. **Implementar integración tarifaria antes de expandir**: Tarjeta única + rutas alimentadoras
 4. **Acompañar con urbanismo social**: Modelo Medellín de estaciones como polos de desarrollo
 5. **Construcción por fases**: No más de 2 líneas simultáneas para mantener viabilidad fiscal
